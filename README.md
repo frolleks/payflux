@@ -31,6 +31,7 @@ a selfhostable cryptocurrency payment processor
    ```
 
 4. Set up environment variables
+
    Create a `.env` file in the root directory and add the following variables:
 
    ```env
@@ -43,14 +44,17 @@ a selfhostable cryptocurrency payment processor
    Replace the values with your Bitcoin Core configuration.
 
 5. Start Bitcoin Core
+
    Ensure that your Bitcoin Core node is running and fully synchronized. When you are running this for development purposes, it is recommended to run Bitcoin Core in the test network.
 
    ```bash
-   bitcoind -testnet -daemon -rpcuser=yourusername -rpcpassword=yourpassword
+   bitcoind -testnet -daemon -rpcuser=yourusername -rpcpassword=yourpassword -rpcport=8333
    ```
 
 6. Start the development server
+
    ```bash
    bun dev
    ```
+
 7. Open your browser and navigate to `http://localhost:3000` to access the application.
