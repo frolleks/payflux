@@ -4,7 +4,7 @@ import { serveStatic } from "hono/bun";
 
 const app = new Hono();
 
-app.route("/api/v1/payments", payments);
+app.route("/api/payments", payments);
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 

@@ -1,5 +1,5 @@
-const PORT = process.env.BITCOIN_PORT || "18334";
-const HOST = process.env.BITCOIN_HOST || "localhost";
+const PORT = process.env.BITCOIN_PORT || "8333";
+const HOST = process.env.BITCOIN_HOST || "127.0.0.1";
 const USER = process.env.BITCOIN_USER || "user";
 const PASS = process.env.BITCOIN_PASS || "pass";
 
@@ -20,7 +20,7 @@ export async function generateAddress() {
     },
     body: JSON.stringify({
       jsonrpc: "1.0",
-      id: "curltest",
+      id: "payflux-server",
       method: "getnewaddress",
       params: [],
     }),

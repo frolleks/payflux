@@ -16,7 +16,9 @@ export const payments = new Hono();
 payments.post("/", async (c) => {
   const { amount, chain, callbackUrl } = await c.req.json();
 
-  const address = generateAddress(); // stubbed for now
+  await db.open("database.db");
+
+  const address = await generateAddress(); // stubbed for now
   const id = crypto.randomUUID();
   const btcAmount = await fiatToBTC(amount);
 
@@ -39,7 +41,11 @@ payments.post("/", async (c) => {
 // check payment status
 payments.get("/:id", async (c) => {
   const { id } = c.req.param();
+
+  await db.open("database.db");
+
   const invoice = await db.get(["invoice", id]);
 
-  return c.json({ id, status: invoice ? "pending" : "not found" });
+  if (invoice) return c.json(JSON.parse(invoice.data as any));
+  else return c.json({ error: "Invoice not found" }, 404);
 });
