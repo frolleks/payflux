@@ -39,6 +39,8 @@ a selfhostable cryptocurrency payment processor
    BITCOIN_PORT=
    BITCOIN_USER=
    BITCOIN_PASS=
+
+   WEBHOOK_SECRET=
    ```
 
    Replace the values with your Bitcoin Core configuration.

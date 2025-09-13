@@ -1,7 +1,7 @@
 const PORT = process.env.BITCOIN_PORT || "8333";
 const HOST = process.env.BITCOIN_HOST || "127.0.0.1";
-const USER = process.env.BITCOIN_USER || "user";
-const PASS = process.env.BITCOIN_PASS || "pass";
+const USER = process.env.BITCOIN_USER;
+const PASS = process.env.BITCOIN_PASS;
 
 interface GetNewAddressResponse {
   id: string;
