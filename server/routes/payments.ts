@@ -5,8 +5,11 @@ import {
   generateAddress,
   satsFromBTC,
 } from "../utils/bitcoin";
+import { fetchAddressStatsETH } from "../utils/ethereum";
 import { db } from "../utils/db";
 import { signPayload } from "../utils/hmac";
+import { fiatToETH, generateETHAddress } from "../utils/ethereum";
+import { parseUnits } from "ethers";
 
 export const payments = new Hono();
 
@@ -24,24 +27,43 @@ payments.post("/", async (c) => {
 
   await db.open("database.db");
 
-  const address = await generateAddress(); // stubbed for now
-  const id = crypto.randomUUID();
-  const btcAmount = await fiatToBTC(amount);
+  if (chain === "btc") {
+    const address = await generateAddress(); // stubbed for now
+    const id = crypto.randomUUID();
+    const btcAmount = await fiatToBTC(amount);
 
-  const invoice = {
-    id,
-    address,
-    amount: btcAmount,
-    chain,
-    callbackUrl,
-    status: "pending",
-  };
+    const invoice = {
+      id,
+      address,
+      amount: btcAmount,
+      chain,
+      callbackUrl,
+      status: "pending",
+    };
 
-  await db.set(["invoice", id], JSON.stringify(invoice));
+    await db.set(["invoice", id], JSON.stringify(invoice));
 
-  return c.json({
-    paymentUrl: `/pay/${id}`,
-  });
+    return c.json({
+      paymentUrl: `/pay/${id}`,
+    });
+  } else if (chain === "eth") {
+    const address = await generateETHAddress();
+    const id = crypto.randomUUID();
+    const ethAmount = await fiatToETH(amount);
+    const invoice = {
+      id,
+      address,
+      amount: ethAmount.toFixed(18),
+      chain,
+      callbackUrl,
+      status: "pending",
+    };
+    await db.set(["invoice", id], JSON.stringify(invoice));
+
+    return c.json({
+      paymentUrl: `/pay/${id}`,
+    });
+  }
 });
 
 // check payment status
@@ -109,5 +131,42 @@ payments.get("/:id", async (c) => {
     }
   }
 
+  if (invoice.chain === "eth" && invoice.address) {
+    const stats = await fetchAddressStatsETH(invoice.address);
+    if (stats) {
+      const confirmedWei = BigInt(stats.confirmed);
+      const requiredWei = parseUnits(invoice.amount, "ether");
+      let newStatus = invoice.status || "pending";
+      if (confirmedWei >= requiredWei) newStatus = "paid";
+
+      if (newStatus !== invoice.status) {
+        invoice.status = newStatus;
+        invoice.confirmedWei = confirmedWei.toString();
+        invoice.unconfirmedWei = "0";
+
+        await db.set(["invoice", id], JSON.stringify(invoice));
+
+        if (newStatus === "paid" && invoice.callbackUrl) {
+          const payload = JSON.stringify({ id, status: "paid" });
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          const secret = process.env.WEBHOOK_SECRET;
+          if (secret) {
+            try {
+              const signature = signPayload(secret, payload);
+              headers["X-Payflux-Signature"] = signature;
+              headers["X-Payflux-Signature-Alg"] = "sha256";
+            } catch {}
+          }
+          fetch(invoice.callbackUrl, {
+            method: "POST",
+            headers,
+            body: payload,
+          }).catch(() => {});
+        }
+      }
+    }
+  }
   return c.json(invoice);
 });

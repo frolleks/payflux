@@ -109,7 +109,7 @@ export default function PaywallPage() {
       const res = await fetch("/api/pay/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 1, chain: "btc" }),
+        body: JSON.stringify({ amount: 1, chain: "eth" }),
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
@@ -170,7 +170,7 @@ export default function PaywallPage() {
   const btcAmountStr = useMemo(() => {
     if (amountBTC == null || Number.isNaN(amountBTC)) return null;
     // Show up to 8 decimal places for BTC
-    return amountBTC.toFixed(8);
+    return amountBTC.toFixed(18);
   }, [amountBTC]);
 
   const statusBadge = useMemo(() => {
@@ -240,14 +240,14 @@ export default function PaywallPage() {
     <div className="min-h-screen w-full flex flex-col items-center p-6 sm:p-10">
       <div className="w-full max-w-2xl space-y-6">
         <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Paywalled Content (BTC)</h1>
+          <h1 className="text-2xl font-semibold">Paywalled Content (Crypto)</h1>
           {statusBadge}
         </header>
 
         {locked ? (
           <div className="rounded-lg border border-black/10 dark:border-white/15 p-5 space-y-4">
             <p className="text-sm">
-              This content is locked. Pay a small amount in Bitcoin to unlock.
+              This content is locked. Pay a small amount in crypto to unlock.
             </p>
 
             {id ? (
@@ -261,7 +261,7 @@ export default function PaywallPage() {
                   </div>
                   {address ? (
                     <div className="mt-1">
-                      <span className="font-medium">BTC Address:</span>{" "}
+                      <span className="font-medium">Address:</span>{" "}
                       <code className="break-all rounded bg-black/5 dark:bg-white/10 px-1 py-0.5">
                         {address}
                       </code>
@@ -269,7 +269,7 @@ export default function PaywallPage() {
                   ) : null}
                   {btcAmountStr ? (
                     <div className="mt-1">
-                      <span className="font-medium">Amount (BTC):</span>{" "}
+                      <span className="font-medium">Amount:</span>{" "}
                       <code className="rounded bg-black/5 dark:bg-white/10 px-1 py-0.5">
                         {btcAmountStr}
                       </code>
@@ -320,7 +320,7 @@ export default function PaywallPage() {
                   onClick={createInvoice}
                   className="rounded-md bg-black text-white dark:bg-white dark:text-black px-4 py-2 text-sm font-medium hover:opacity-90"
                 >
-                  Unlock with Bitcoin
+                  Unlock with Crypto
                 </button>
                 {error ? (
                   <span className="text-sm text-red-600 dark:text-red-400">

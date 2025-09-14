@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@cross/kv": "npm:@jsr/cross__kv",
+    "ethers": "^6.15.0",
     "hono": "^4.9.7",
     "sats-connect": "^3.6.1"
   }

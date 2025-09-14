@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { AddressPurpose, request } from "sats-connect";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { parseEther } from "ethers";
 
 type InvoiceStatus = "pending" | "unconfirmed" | "paid";
 interface Invoice {
@@ -38,11 +39,22 @@ export default function PayPage() {
   if (isLoading) return <p>Loading…</p>;
   if (isError || !invoice) return <p>Invoice not found.</p>;
 
-  const requiredSats = Math.round(Number(invoice.amount) * 1e8);
+  if (!["btc", "eth"].includes(invoice.chain)) {
+    return <p>Unsupported chain.</p>;
+  }
+
+  const isBTC = invoice.chain === "btc";
+  const isETH = invoice.chain === "eth";
+
+  const requiredSats = isBTC ? Math.round(Number(invoice.amount) * 1e8) : 0;
   const confirmedSats =
-    typeof invoice.confirmedSats === "number" ? invoice.confirmedSats : 0;
+    isBTC && typeof invoice.confirmedSats === "number"
+      ? invoice.confirmedSats
+      : 0;
   const unconfirmedSats =
-    typeof invoice.unconfirmedSats === "number" ? invoice.unconfirmedSats : 0;
+    isBTC && typeof invoice.unconfirmedSats === "number"
+      ? invoice.unconfirmedSats
+      : 0;
   const receivedSats = confirmedSats + unconfirmedSats;
 
   const statusClass =
@@ -54,6 +66,67 @@ export default function PayPage() {
       ? "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-900"
       : "bg-gray-100 text-gray-700 border-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:border-neutral-700";
 
+  const currencyLabel = isBTC ? "BTC" : isETH ? "ETH" : "";
+  const amountDisplay = isETH
+    ? invoice.amount.toString()
+    : invoice.amount.toString();
+
+  const buttonText = isBTC
+    ? "Pay with Bitcoin via Sats Connect"
+    : isETH
+    ? "Pay with Ethereum via Phantom"
+    : "";
+  const buttonClass = isBTC
+    ? "bg-orange-500 hover:bg-orange-600"
+    : isETH
+    ? "bg-purple-500 hover:bg-purple-600"
+    : "";
+
+  const handlePayment = async () => {
+    if (isBTC) {
+      await request("getAccounts", {
+        purposes: [
+          AddressPurpose.Payment,
+          AddressPurpose.Ordinals,
+          AddressPurpose.Stacks,
+        ],
+        message: "Cool app wants to know your addresses!",
+      });
+
+      await request("sendTransfer", {
+        recipients: [
+          {
+            address: invoice.address,
+            amount: Math.round(Number(invoice.amount) * 1e8),
+          },
+        ],
+      });
+    } else if (isETH) {
+      if ("phantom" in window) {
+        const anyWindow: any = window;
+        const provider = anyWindow.phantom?.ethereum;
+
+        if (provider) {
+          const accounts = await provider.request({
+            method: "eth_requestAccounts",
+          });
+
+          await provider.request({
+            method: "eth_sendTransaction",
+            params: [
+              {
+                from: accounts[0],
+                to: invoice.address,
+                value:
+                  "0x" + parseEther(invoice.amount.toString()).toString(16),
+              },
+            ],
+          });
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border shadow-sm bg-white dark:bg-neutral-900 p-6">
@@ -62,7 +135,7 @@ export default function PayPage() {
             Pay
           </div>
           <div className="font-mono text-2xl md:text-3xl font-semibold tracking-tight text-center">
-            {invoice.amount} BTC
+            {amountDisplay} {currencyLabel}
           </div>
         </div>
 
@@ -81,7 +154,7 @@ export default function PayPage() {
             </span>
           </div>
 
-          {typeof invoice.confirmedSats === "number" && (
+          {isBTC && typeof invoice.confirmedSats === "number" && (
             <div className="rounded-xl border p-4 bg-gray-50 dark:bg-neutral-800">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Received</span>
@@ -102,33 +175,13 @@ export default function PayPage() {
             </div>
           )}
 
-          {invoice.chain === "btc" && (
-            <Button
-              className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer"
-              disabled={invoice.status === "paid"}
-              onClick={async () => {
-                await request("getAccounts", {
-                  purposes: [
-                    AddressPurpose.Payment,
-                    AddressPurpose.Ordinals,
-                    AddressPurpose.Stacks,
-                  ],
-                  message: "Cool app wants to know your addresses!",
-                });
-
-                await request("sendTransfer", {
-                  recipients: [
-                    {
-                      address: invoice.address,
-                      amount: Math.round(Number(invoice.amount) * 1e8),
-                    },
-                  ],
-                });
-              }}
-            >
-              Pay with Bitcoin via Sats Connect
-            </Button>
-          )}
+          <Button
+            className={`w-full ${buttonClass} cursor-pointer`}
+            disabled={invoice.status === "paid"}
+            onClick={handlePayment}
+          >
+            {buttonText}
+          </Button>
         </div>
       </div>
     </div>
