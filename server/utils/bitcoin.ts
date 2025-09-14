@@ -48,3 +48,36 @@ export async function fiatToBTC(fiat: number): Promise<number> {
   const price = data.bitcoin.usd;
   return fiat / price;
 }
+
+const MEMPOOL_API_BASE =
+  process.env.MEMPOOL_API_BASE || "https://mempool.space/api";
+
+type MempoolAddressStats = {
+  chain_stats: {
+    funded_txo_sum: number;
+    spent_txo_sum: number;
+    tx_count: number;
+  };
+  mempool_stats: {
+    funded_txo_sum: number;
+    spent_txo_sum: number;
+    tx_count: number;
+  };
+};
+
+export async function fetchAddressStats(
+  address: string
+): Promise<MempoolAddressStats | null> {
+  try {
+    const res = await fetch(`${MEMPOOL_API_BASE}/address/${address}`);
+    if (!res.ok) return null;
+    return (await res.json()) as MempoolAddressStats;
+  } catch {
+    return null;
+  }
+}
+
+export function satsFromBTC(btc: number | string) {
+  const n = typeof btc === "string" ? parseFloat(btc) : btc;
+  return Math.round(n * 1e8);
+}

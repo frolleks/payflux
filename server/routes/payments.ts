@@ -1,42 +1,14 @@
 import { Hono } from "hono";
-import { fiatToBTC, generateAddress } from "../utils/bitcoin";
+import {
+  fetchAddressStats,
+  fiatToBTC,
+  generateAddress,
+  satsFromBTC,
+} from "../utils/bitcoin";
 import { db } from "../utils/db";
 import { signPayload } from "../utils/hmac";
 
 export const payments = new Hono();
-
-const MEMPOOL_API_BASE =
-  process.env.MEMPOOL_API_BASE || "https://mempool.space/api";
-
-type MempoolAddressStats = {
-  chain_stats: {
-    funded_txo_sum: number;
-    spent_txo_sum: number;
-    tx_count: number;
-  };
-  mempool_stats: {
-    funded_txo_sum: number;
-    spent_txo_sum: number;
-    tx_count: number;
-  };
-};
-
-async function fetchAddressStats(
-  address: string
-): Promise<MempoolAddressStats | null> {
-  try {
-    const res = await fetch(`${MEMPOOL_API_BASE}/address/${address}`);
-    if (!res.ok) return null;
-    return (await res.json()) as MempoolAddressStats;
-  } catch {
-    return null;
-  }
-}
-
-function satsFromBTC(btc: number | string) {
-  const n = typeof btc === "string" ? parseFloat(btc) : btc;
-  return Math.round(n * 1e8);
-}
 
 /**
  * POST /payments
