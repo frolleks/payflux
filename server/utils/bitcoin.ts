@@ -25,7 +25,12 @@ export async function generateAddress() {
       params: [],
     }),
   });
+
   const data = (await res.json()) as GetNewAddressResponse;
+
+  if (data.error) {
+    throw data.error;
+  }
 
   return data.result;
 }

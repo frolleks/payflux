@@ -50,13 +50,13 @@ a selfhostable cryptocurrency payment processor
    Ensure that your Bitcoin Core node is running and fully synchronized. When you are running this for development purposes, it is recommended to run Bitcoin Core in the test network.
 
    ```bash
-   bitcoind -testnet -daemon -rpcuser=yourusername -rpcpassword=yourpassword -rpcport=8333
+   bitcoind -testnet4 -daemon -rpcuser=yourusername -rpcpassword=yourpassword -rpcport=8333
    ```
 
 6. Start the development server
 
    ```bash
-   bun dev
+   bun --filter "*" dev
    ```
 
-7. Open your browser and navigate to `http://localhost:3000` to access the application.
+7. Open your browser and navigate to `http://localhost:5173` to access the application.

@@ -1,17 +1,12 @@
 {
-  "name": "payflux",
-  "module": "src/index.ts",
-  "type": "module",
+  "name": "root",
   "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@cross/kv": "npm:@jsr/cross__kv",
-    "hono": "^4.9.7",
-    "sats-connect": "^3.6.1"
-  }
+  "workspaces": [
+    "server",
+    "ui"
+  ],
+  "trustedDependencies": [
+    "cbor-extract",
+    "esbuild"
+  ]
 }
