@@ -30,7 +30,15 @@ a selfhostable cryptocurrency payment processor
     bun install
    ```
 
-4. Set up environment variables
+4. Start Bitcoin Core
+
+   Ensure that your Bitcoin Core node is running and fully synchronized. When you are running this for development purposes, it is recommended to run Bitcoin Core in the test network.
+
+   ```bash
+   bitcoind -testnet4 -daemon -rpcuser=yourusername -rpcpassword=yourpassword -rpcport=8333
+   ```
+
+5. Set up environment variables
 
    Create a `.env` file in the root directory and add the following variables:
 
@@ -41,17 +49,12 @@ a selfhostable cryptocurrency payment processor
    BITCOIN_PASS=
 
    WEBHOOK_SECRET=
+
+   MNEMONIC= # optional, for generating Ethereum wallet addresses and enabling ETH payments
+   ETHERSCAN_API_KEY= # optional, for enabling ETH payments
    ```
 
    Replace the values with your Bitcoin Core configuration.
-
-5. Start Bitcoin Core
-
-   Ensure that your Bitcoin Core node is running and fully synchronized. When you are running this for development purposes, it is recommended to run Bitcoin Core in the test network.
-
-   ```bash
-   bitcoind -testnet4 -daemon -rpcuser=yourusername -rpcpassword=yourpassword -rpcport=8333
-   ```
 
 6. Start the development server
 
