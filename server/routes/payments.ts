@@ -28,7 +28,7 @@ payments.post("/", async (c) => {
   await db.open("database.db");
 
   if (chain === "btc") {
-    const address = await generateAddress(); // stubbed for now
+    const address = await generateAddress();
     const id = crypto.randomUUID();
     const btcAmount = await fiatToBTC(amount);
 
