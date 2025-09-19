@@ -33,7 +33,7 @@ export async function generateETHAddress(): Promise<string> {
 
 export async function fetchAddressStatsETH(
   address: string
-): Promise<{ confirmed: number; unconfirmed: number } | null> {
+): Promise<{ confirmed: number } | null> {
   const API_KEY = process.env.ETHERSCAN_API_KEY;
 
   try {
@@ -46,7 +46,7 @@ export async function fetchAddressStatsETH(
     const data: any = await res.json();
     if (data.status !== "1") return null;
     const balance = parseInt(data.result, 10);
-    return { confirmed: balance, unconfirmed: 0 }; // Ethereum doesn't have unconfirmed balance in the same way as Bitcoin
+    return { confirmed: balance };
   } catch (error) {
     return null;
   }

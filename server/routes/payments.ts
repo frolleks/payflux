@@ -66,7 +66,12 @@ payments.post("/", async (c) => {
   }
 });
 
-// check payment status
+/**
+ * GET /payments/:id
+ * Gets current payment status of a certain invoice
+ * response: { id: string, address: string, chain: string, callbackUrl: string, status: "paid" | "unconfirmed" | "pending" }
+ */
+
 payments.get("/:id", async (c) => {
   const { id } = c.req.param();
 
@@ -78,7 +83,6 @@ payments.get("/:id", async (c) => {
 
   const invoice = JSON.parse(raw.data as any);
 
-  // Check mempool.space for BTC payments and update status
   if (invoice.chain === "btc" && invoice.address) {
     const stats = await fetchAddressStats(invoice.address);
     if (stats) {
@@ -104,7 +108,6 @@ payments.get("/:id", async (c) => {
 
         await db.set(["invoice", id], JSON.stringify(invoice));
 
-        // Optional: fire webhook when paid (best-effort)
         if (newStatus === "paid" && invoice.callbackUrl) {
           const payload = JSON.stringify({ id, status: "paid" });
 
@@ -142,7 +145,6 @@ payments.get("/:id", async (c) => {
       if (newStatus !== invoice.status) {
         invoice.status = newStatus;
         invoice.confirmedWei = confirmedWei.toString();
-        invoice.unconfirmedWei = "0";
 
         await db.set(["invoice", id], JSON.stringify(invoice));
 
