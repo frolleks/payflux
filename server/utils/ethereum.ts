@@ -1,22 +1,26 @@
 import { db } from "./db";
 import { HDNodeWallet } from "ethers";
+import { kvTable } from "./db/schema";
+import { eq } from "drizzle-orm";
+import type { GetCurrentPriceResponse } from "./types";
 
 export async function fiatToETH(fiat: number): Promise<number> {
   const res = await fetch(
-    "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    "https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
   );
-  const data = (await res.json()) as { ethereum: { usd: number } };
-  const price = data.ethereum.usd;
+  const data = (await res.json()) as GetCurrentPriceResponse;
+  const price = data.price;
   return fiat / price;
 }
 
 export async function generateETHAddress(): Promise<string> {
-  const counterKey = ["ethIndex"];
+  const [row] = await db
+    .select()
+    .from(kvTable)
+    .where(eq(kvTable.key, "ethIndex"));
 
-  await db.open("database.db");
-
-  const raw = await db.get(counterKey);
-  let index = parseInt(String(raw?.data ?? "0"), 10);
+  let index = 0;
+  if (row && row.value) index = parseInt(row.value, 10) || 0;
 
   const phrase = process.env.MNEMONIC!;
   if (!phrase) throw new Error("MNEMONIC environment variable is not set");
@@ -26,7 +30,15 @@ export async function generateETHAddress(): Promise<string> {
   const address = hdNode.address;
 
   index += 1;
-  await db.set(counterKey, String(index));
+  const exists = !!row;
+  if (exists) {
+    await db
+      .update(kvTable)
+      .set({ value: String(index) })
+      .where(eq(kvTable.key, "ethIndex"));
+  } else {
+    await db.insert(kvTable).values({ key: "ethIndex", value: String(index) });
+  }
 
   return address;
 }

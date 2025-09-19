@@ -6,6 +6,7 @@
     "ui"
   ],
   "trustedDependencies": [
+    "better-sqlite3",
     "cbor-extract",
     "esbuild"
   ]

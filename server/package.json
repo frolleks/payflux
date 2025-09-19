@@ -5,16 +5,21 @@
   "private": true,
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun run --watch index.ts"
+    "dev": "bun run --watch index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.4"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@cross/kv": "npm:@jsr/cross__kv",
+    "better-sqlite3": "^12.2.0",
+    "drizzle-orm": "^0.44.5",
     "ethers": "^6.15.0",
     "hono": "^4.9.7",
     "sats-connect": "^3.6.1"

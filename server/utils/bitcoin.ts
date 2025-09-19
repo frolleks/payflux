@@ -1,3 +1,5 @@
+import type { GetCurrentPriceResponse } from "./types";
+
 const PORT = process.env.BITCOIN_PORT || "8333";
 const HOST = process.env.BITCOIN_HOST || "127.0.0.1";
 const USER = process.env.BITCOIN_USER;
@@ -35,17 +37,13 @@ export async function generateAddress() {
   return data.result;
 }
 
-interface GetCurrentPriceResponse {
-  usd: number;
-}
-
 export async function fiatToBTC(fiat: number): Promise<number> {
   const res = await fetch(
-    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    "https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
   );
-  const data = (await res.json()) as { bitcoin: GetCurrentPriceResponse };
+  const data = (await res.json()) as GetCurrentPriceResponse;
 
-  const price = data.bitcoin.usd;
+  const price = data.price;
   return fiat / price;
 }
 
