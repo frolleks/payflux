@@ -3,7 +3,9 @@
   "private": true,
   "workspaces": [
     "server",
-    "ui"
+    "ui",
+    "packages/*",
+    "examples/*"
   ],
   "trustedDependencies": [
     "better-sqlite3",

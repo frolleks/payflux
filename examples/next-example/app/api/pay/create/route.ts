@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProcessorBaseUrl } from "@/lib/paywallStore";
 
+import { Payflux } from "@payflux/server";
+
 function buildAppBaseUrl(req: NextRequest) {
   const envBase = process.env.APP_BASE_URL;
   if (envBase) return envBase.replace(/\/+$/, "");
@@ -16,38 +18,21 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-
-  const amount = Number(body?.amount ?? 1); // USD
-  const chain = (body?.chain ?? "btc") as string;
-
   const appBase = buildAppBaseUrl(req);
   const processorBase = getProcessorBaseUrl();
+  const payflux = new Payflux(processorBase);
+
+  const amount = Number(body?.amount ?? 1); // USD
+  const chain = body?.chain ?? "btc";
 
   const callbackUrl = `${appBase}/api/pay/webhook`;
 
-  const res = await fetch(`${processorBase}/api/payments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      amount,
-      chain,
-      callbackUrl,
-    }),
-  });
+  const invoice = await payflux.invoices.create(amount, chain, callbackUrl);
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    return NextResponse.json(
-      { error: "processor_error", detail: text || res.statusText },
-      { status: 502 }
-    );
+  if (invoice.success) {
+    const paymentUrl = new URL(invoice.paymentUrl, processorBase).toString();
+    const id = invoice.id;
+
+    return NextResponse.json({ id, paymentUrl });
   }
-
-  const data = (await res.json()) as { paymentUrl: string };
-  const paymentUrl = new URL(data.paymentUrl, processorBase).toString();
-
-  // Extract invoice id from /pay/:id path part
-  const id = data.paymentUrl.split("/").filter(Boolean).pop();
-
-  return NextResponse.json({ id, paymentUrl });
 }

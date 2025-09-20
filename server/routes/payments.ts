@@ -51,6 +51,7 @@ payments.post("/", async (c) => {
     await db.insert(invoiceTable).values(invoice);
 
     return c.json({
+      id,
       paymentUrl: `/pay/${id}`,
     });
   } else if (chain === "eth") {
@@ -76,6 +77,7 @@ payments.post("/", async (c) => {
     await db.insert(invoiceTable).values(invoice);
 
     return c.json({
+      id,
       paymentUrl: `/pay/${id}`,
     });
   }

@@ -30,15 +30,20 @@ export default function Dashboard() {
     <div className="p-6">
       <div className="max-w-3xl mx-auto space-y-4">
         <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Dashboard — Funds</h1>
+          <h1 className="text-2xl font-semibold">Dashboard - Funds</h1>
           <div>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="cursor-pointer"
+            >
               Refresh
             </Button>
           </div>
         </header>
 
-        <section className="rounded-md border p-4">
+        <section className="rounded-md border p-4 shadow-xs">
           {isLoading ? (
             <div>Loading…</div>
           ) : error ? (
