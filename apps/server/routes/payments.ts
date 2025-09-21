@@ -1,17 +1,12 @@
 import { Hono } from "hono";
-import {
-  fetchAddressStats,
-  fiatToBTC,
-  generateAddress,
-  satsFromBTC,
-} from "../utils/bitcoin";
+import { fetchAddressStats, satsFromBTC } from "../utils/bitcoin";
 import { fetchAddressStatsETH } from "../utils/ethereum";
 import { db } from "../utils/db";
 import { signPayload } from "../utils/hmac";
-import { fiatToETH, generateETHAddress } from "../utils/ethereum";
 import { parseUnits } from "ethers";
 import { invoiceTable } from "../utils/db/schema";
 import { eq } from "drizzle-orm";
+import { generateInvoice } from "../utils/generateInvoice";
 
 export const payments = new Hono();
 
@@ -21,64 +16,31 @@ export const payments = new Hono();
  * body: { amount: number, chain: string, callbackUrl: string }
  * amount in USD, chain is the cryptocurrency used, callbackUrl is where to send webhook when paid
  *
- * response: { paymentUrl: string }
+ * response: { id: string, paymentUrl: string }
  */
 
 payments.post("/", async (c) => {
   const { amount, chain, callbackUrl } = await c.req.json();
 
-  if (chain === "btc") {
-    const address = await generateAddress();
-    const id = crypto.randomUUID();
-    const btcAmount = await fiatToBTC(amount);
+  try {
+    const invoice = await generateInvoice(amount, chain, callbackUrl);
 
-    const now = Math.floor(Date.now() / 1000);
+    if (invoice && invoice.success && "id" in invoice) {
+      return c.json({
+        id: invoice.id,
+        paymentUrl: `/pay/${invoice.id}`,
+      });
+    }
 
-    const invoice = {
-      id,
-      address,
-      amount: btcAmount.toString(),
-      chain,
-      callbackUrl,
-      status: "pending",
-      confirmedSats: 0,
-      unconfirmedSats: 0,
-      confirmedWei: "0",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await db.insert(invoiceTable).values(invoice);
-
+    if (!invoice || !invoice.success) {
+      return c.json(
+        { error: (invoice as any)?.error ?? "Failed to generate invoice" },
+        400
+      );
+    }
+  } catch (error) {
     return c.json({
-      id,
-      paymentUrl: `/pay/${id}`,
-    });
-  } else if (chain === "eth") {
-    const address = await generateETHAddress();
-    const id = crypto.randomUUID();
-    const ethAmount = await fiatToETH(amount);
-    const now = Math.floor(Date.now() / 1000);
-
-    const invoice = {
-      id,
-      address,
-      amount: ethAmount.toFixed(18),
-      chain,
-      callbackUrl,
-      status: "pending",
-      confirmedSats: 0,
-      unconfirmedSats: 0,
-      confirmedWei: "0",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await db.insert(invoiceTable).values(invoice);
-
-    return c.json({
-      id,
-      paymentUrl: `/pay/${id}`,
+      error,
     });
   }
 });
@@ -90,7 +52,7 @@ payments.post("/", async (c) => {
  */
 
 payments.get("/:id", async (c) => {
-  const { id } = c.req.param();
+  const id = c.req.param("id");
 
   const [selectedInvoice] = await db
     .select()
