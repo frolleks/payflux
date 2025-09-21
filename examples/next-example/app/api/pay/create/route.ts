@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProcessorBaseUrl } from "@/lib/paywallStore";
 
-import { Payflux } from "@payflux/server";
+import { payflux } from "@/lib/payflux";
 
 function buildAppBaseUrl(req: NextRequest) {
   const envBase = process.env.APP_BASE_URL;
@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
   }
   const appBase = buildAppBaseUrl(req);
   const processorBase = getProcessorBaseUrl();
-  const payflux = new Payflux(processorBase);
 
   const amount = Number(body?.amount ?? 1); // USD
   const chain = body?.chain ?? "btc";

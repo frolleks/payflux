@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProcessorBaseUrl, isPaid } from "@/lib/paywallStore";
+import { isPaid } from "@/lib/paywallStore";
+import { payflux } from "@/lib/payflux";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -14,33 +15,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ id, status: "paid" });
   }
 
-  const processorBase = getProcessorBaseUrl();
-
-  const res = await fetch(
-    `${processorBase}/api/payments/${encodeURIComponent(id)}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    }
-  );
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    return NextResponse.json(
-      { error: "processor_error", detail: text || res.statusText },
-      { status: 502 }
-    );
-  }
-
-  const data = await res.json();
+  const invoice = await payflux.invoices.retrieve(id);
   // Pass-through essential fields. Processor returns full invoice object.
-  return NextResponse.json({
-    id: data.id ?? id,
-    status: data.status ?? "pending",
-    amount: data.amount,
-    address: data.address,
-    confirmedSats: data.confirmedSats,
-    unconfirmedSats: data.unconfirmedSats,
-    chain: data.chain,
-  });
+  if (invoice.success) {
+    return NextResponse.json({
+      id: invoice.id ?? id,
+      status: invoice.status ?? "pending",
+      amount: invoice.amount,
+      address: invoice.address,
+      confirmedSats: invoice.confirmedSats,
+      unconfirmedSats: invoice.unconfirmedSats,
+      chain: invoice.chain,
+    });
+  }
 }
