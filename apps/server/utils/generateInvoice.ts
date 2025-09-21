@@ -32,7 +32,7 @@ export async function generateInvoice(
 
       await db.insert(invoiceTable).values(invoice);
 
-      return { success: true, ...invoice };
+      return invoice;
     } else if (chain === "eth") {
       const address = await generateETHAddress();
       const id = crypto.randomUUID();
@@ -55,9 +55,9 @@ export async function generateInvoice(
 
       await db.insert(invoiceTable).values(invoice);
 
-      return { success: true, ...invoice };
+      return invoice;
     }
   } catch (error) {
-    return { success: false, error };
+    return { error };
   }
 }
