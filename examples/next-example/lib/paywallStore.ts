@@ -27,6 +27,5 @@ export function verifyHmac(
 }
 
 export function getProcessorBaseUrl() {
-  // Point to your Payflux processor backend (Hono server). Defaults to local dev server.
-  return process.env.PROCESSOR_BASE_URL || "http://localhost:5173";
+  return process.env.PROCESSOR_BASE_URL || "http://localhost:3000";
 }

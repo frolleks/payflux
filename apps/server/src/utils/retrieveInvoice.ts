@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { parseUnits } from "ethers";
 import { fetchAddressStats, satsFromBTC } from "./bitcoin";
-import { db } from "./db";
-import { invoiceTable } from "./db/schema";
+import { db } from "../db";
+import { invoiceTable } from "../db/schema";
 import { fetchAddressStatsETH } from "./ethereum";
 import { signPayload } from "./hmac";
 

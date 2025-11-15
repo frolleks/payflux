@@ -6,7 +6,7 @@ a selfhostable cryptocurrency payment processor
 
 ### Prerequisites
 
-- Node.js v22.x+, Bun 1.2.x+
+- Node.js 22.x+, Bun 1.3.x+
 - Bitcoin Core v28+
 - Git
 

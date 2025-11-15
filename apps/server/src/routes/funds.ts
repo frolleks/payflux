@@ -4,16 +4,14 @@ import {
   getDefaultProvider,
   formatEther,
 } from "ethers";
-import { Hono } from "hono";
-import { db } from "../utils/db";
-import { kvTable } from "../utils/db/schema";
+import { db } from "../db";
+import { kvTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 
-export const funds = new Hono();
-
-funds.get("/total", async (c) => {
+export const getTotalFunds = async (req: Request) => {
   const phrase = process.env.MNEMONIC;
-  if (!phrase) return c.json({ error: "MNEMONIC not set" }, 500);
+  if (!phrase)
+    return Response.json({ error: "MNEMONIC not set" }, { status: 500 });
 
   // RPC URL from env or default to Ethers.js fallback
   const rpc = process.env.RPC_URL;
@@ -45,9 +43,9 @@ funds.get("/total", async (c) => {
     }
   }
 
-  return c.json({
+  return Response.json({
     totalWei: total.toString(),
     totalEther: formatEther(total),
     wallets: results,
   });
-});
+};

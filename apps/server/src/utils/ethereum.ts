@@ -1,6 +1,6 @@
-import { db } from "./db";
+import { db } from "../db";
 import { HDNodeWallet } from "ethers";
-import { kvTable } from "./db/schema";
+import { kvTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import type { GetCurrentPriceResponse } from "./types";
 
@@ -13,7 +13,7 @@ export async function fiatToETH(fiat: number): Promise<number> {
   return fiat / price;
 }
 
-export async function generateETHAddress(): Promise<string> {
+export async function generateETHWallet(): Promise<HDNodeWallet> {
   const [row] = await db
     .select()
     .from(kvTable)
@@ -26,8 +26,8 @@ export async function generateETHAddress(): Promise<string> {
   if (!phrase) throw new Error("MNEMONIC environment variable is not set");
 
   const path = `m/44'/60'/0'/0/${index}`;
-  const hdNode = HDNodeWallet.fromPhrase(phrase, path);
-  const address = hdNode.address;
+  const wallet = HDNodeWallet.fromPhrase(phrase, path);
+  const address = wallet.address;
 
   index += 1;
   const exists = !!row;
@@ -40,7 +40,7 @@ export async function generateETHAddress(): Promise<string> {
     await db.insert(kvTable).values({ key: "ethIndex", value: String(index) });
   }
 
-  return address;
+  return wallet;
 }
 
 export async function fetchAddressStatsETH(
