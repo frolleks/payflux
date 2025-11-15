@@ -79,10 +79,7 @@ export default function PayPage() {
   useEffect(() => {
     if (!invoice) return;
     if (txHash || autoPaymentAttempted) return;
-
-    setAutoPaymentAttempted(true);
-    void handlePayment();
-  }, [invoice, txHash, autoPaymentAttempted, handlePayment]);
+  }, [invoice, txHash, autoPaymentAttempted]);
 
   if (isLoading) return <p>Loading…</p>;
   if (isError || !invoice) return <p>Invoice not found.</p>;
@@ -120,7 +117,16 @@ export default function PayPage() {
           {txHash !== "" ? (
             <div className="rounded-xl border p-4 bg-gray-50 dark:bg-neutral-800">
               <div className="text-xs text-gray-500 mb-1">Transaction hash</div>
-              <div className="font-mono text-sm break-all">{txHash}</div>
+              <div className="font-mono text-sm break-all">
+                <a
+                  href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                  target="_blank"
+                >
+                  <span className="text-blue-500 hover:underline">
+                    {txHash}
+                  </span>
+                </a>
+              </div>
             </div>
           ) : null}
 
